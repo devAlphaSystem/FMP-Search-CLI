@@ -104,7 +104,7 @@ try {
     },
   });
 } catch (e) {
-  error(e.message);
+  error(`${e.message}\n  Run "fmp-search --help" for usage info.`);
 }
 
 const { values: opts, positionals } = parsed;
@@ -177,6 +177,10 @@ const fields = opts.fields
 
 if (!["json", "table", "jsonl", "csv"].includes(format)) {
   error(`Unknown format "${format}". Supported: json, table, jsonl, csv`);
+}
+
+if (opts.sort && !["price_asc", "price_desc", "relevance"].includes(opts.sort)) {
+  error(`Unknown --sort "${opts.sort}". Supported: price_asc, price_desc, relevance`);
 }
 
 if (!Number.isInteger(concurrency) || concurrency < 1) {
@@ -295,7 +299,7 @@ function output(items, result, fmt, pretty) {
  */
 function outputTable(items) {
   if (items.length === 0) {
-    console.log("No results found.");
+    console.log("Nenhum resultado encontrado.");
     return;
   }
 
@@ -311,7 +315,8 @@ function outputTable(items) {
 
   for (const [i, item] of items.entries()) {
     const num = dim(`${String(i + 1).padStart(2)}.`);
-    const title = bold((item.title || "").slice(0, 72));
+    const rawTitle = item.title || "";
+    const title = bold(rawTitle.length > 72 ? rawTitle.slice(0, 71) + "…" : rawTitle);
     const price = item.price != null ? green(`${item.currency || ""} ${item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`) : yellow("Preço não informado");
 
     let badges = "";
@@ -573,7 +578,8 @@ footer a{color:inherit}
 .lb-nav:hover{background:rgba(255,255,255,.3)}
 .lb-prev{left:1rem}
 .lb-next{right:1rem}
-.lb-counter{color:rgba(255,255,255,.7);font-size:.8rem}`;
+.lb-counter{color:rgba(255,255,255,.7);font-size:.8rem}
+.skip{position:absolute;top:-100%;left:0;background:var(--accent);color:var(--accent-fg);padding:.5rem 1rem;z-index:200;font-weight:600;border-radius:0 0 var(--rs) 0;transition:top .15s;text-decoration:none;font-size:.85rem}.skip:focus{top:0}`;
 
   const js = `(function(){
   var root=document.documentElement,btn=document.getElementById('theme-btn');
@@ -726,6 +732,7 @@ footer a{color:inherit}
 <style>${css}</style>
 </head>
 <body>
+<a class="skip" href="#main-content">Pular para o conte\xFAdo</a>
 <header>
   <div class="h-left">
     <span class="logo">fmp-search<em>.cli</em></span>
@@ -734,7 +741,7 @@ footer a{color:inherit}
       <span class="h-meta">${query.city ? `${query.city} \xB7 ` : ""}${total} resultado${pagination.total === 1 ? "" : "s"} \xB7 ${now}</span>
     </div>
   </div>
-  <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode"></button>
+  <button id="theme-btn" class="theme-btn" aria-label="Alternar tema claro/escuro"></button>
 </header>
 <div class="controls" data-initial-sort="${initialSort}">
   <div class="ctrl-search">
@@ -756,19 +763,19 @@ footer a{color:inherit}
     </div>
     <div class="anti-chips" id="anti-chips"></div>
   </div>
-  <span class="ctrl-count" id="ctrl-count"></span>
+  <span class="ctrl-count" id="ctrl-count" aria-live="polite"></span>
 </div>
-<main>
+<main id="main-content">
   <div class="grid">
 ${cardsHtml}
   </div>
 </main>
 <footer>Gerado por <strong>fmp-search-cli</strong> &middot; Dados do <a href="https://www.facebook.com/marketplace" target="_blank" rel="noopener noreferrer">Facebook Marketplace</a></footer>
-<div class="lightbox" id="lightbox">
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galeria de imagens">
   <button class="lb-close" id="lb-close" aria-label="Fechar">&times;</button>
-  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Anterior">&#8249;</button>
-  <button class="lb-nav lb-next" id="lb-next" aria-label="Pr\xF3xima">&#8250;</button>
-  <img class="lb-img" id="lb-img" src="" alt="">
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Foto anterior">&#8249;</button>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="Pr\xF3xima foto">&#8250;</button>
+  <img class="lb-img" id="lb-img" src="" alt="Imagem ampliada">
   <span class="lb-counter" id="lb-counter"></span>
 </div>
 <script>${js}</script>
