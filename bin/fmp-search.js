@@ -8,7 +8,18 @@
  */
 
 import { parseArgs } from "node:util";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { search, searchRaw, getCategories, getCities } from "../lib/index.js";
+import { initLogger, log, closeLogger } from "../lib/logger.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const LOG_FLAG = process.argv.includes("--log");
+if (LOG_FLAG) {
+  initLogger(path.join(__dirname, ".."));
+}
 
 const HELP = `
   \x1b[1mfmp-search\x1b[0m — Search Facebook Marketplace from the terminal.
@@ -32,6 +43,8 @@ const HELP = `
     --timeout <ms>         HTTP timeout in ms (default: 15000)
     --concurrency <n>      Max parallel detail requests (default: 5)
     --strict               Only show results where ALL search terms appear in the title or description
+    --no-rate-limit        Disable built-in rate limiting (use at your own risk — may get your IP blocked)
+    --log                  Write a detailed debug log file to the project root
 
   \x1b[1mOutput:\x1b[0m
     -f, --format <type>    Output format: "json", "table", "jsonl", "csv" (default: json)
@@ -77,6 +90,8 @@ try {
       timeout: { type: "string" },
       concurrency: { type: "string" },
       strict: { type: "boolean", default: false },
+      "no-rate-limit": { type: "boolean", default: false },
+      log: { type: "boolean", default: false },
       format: { type: "string", short: "f" },
       pretty: { type: "boolean", default: false },
       raw: { type: "boolean", default: false },
@@ -208,6 +223,7 @@ try {
     maxPrice,
     radius,
     strict: opts.strict,
+    noRateLimit: opts["no-rate-limit"],
   });
 
   let items = result.items;
@@ -236,8 +252,12 @@ try {
     }
   }
 } catch (e) {
+  log("CLI", "Fatal error", e);
+  closeLogger();
   error(e.message);
 }
+
+closeLogger();
 
 /**
  * Prints search results to stdout in the requested format.
