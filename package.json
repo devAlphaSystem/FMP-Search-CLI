@@ -1,6 +1,6 @@
 {
   "name": "fmp-search-cli",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Extract structured data from Facebook Marketplace search results — no API key, no browser, no scraping.",
   "keywords": [
     "facebook",
@@ -20,7 +20,8 @@
   "main": "./lib/index.js",
   "scripts": {
     "format": "prettier --write .",
-    "readyup": "node readyup.js"
+    "readyup": "node readyup.js",
+    "setup-cffi": "node scripts/setup-cffi.js"
   },
   "exports": {
     ".": "./lib/index.js"
@@ -28,6 +29,7 @@
   "files": [
     "bin/",
     "lib/",
+    "scripts/",
     "README.md",
     "LICENSE"
   ],
@@ -37,5 +39,5 @@
   "devDependencies": {
     "prettier": "^3.8.1"
   },
-  "updated": "2026.02.27.0304"
+  "updated": "2026.03.01.0152"
 }

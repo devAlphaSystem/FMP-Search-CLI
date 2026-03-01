@@ -14,6 +14,7 @@ Command line and library tool to extract structured search results from Facebook
 
 - Node.js `>=18`
 - Network access to Facebook Marketplace pages
+- **Optional:** Python `>=3.10` + [`curl_cffi`](https://github.com/lexiforest/curl_cffi) for Chrome TLS/HTTP2 fingerprint impersonation (reduces blocks)
 
 ## Installation
 
@@ -31,6 +32,22 @@ Then run:
 ```bash
 fmp-search --help
 ```
+
+### Anti-bot enhancement (optional)
+
+Install `curl_cffi` to enable Chrome TLS fingerprint impersonation, which significantly reduces rate limiting and blocking:
+
+```bash
+npm run setup-cffi
+```
+
+Or manually:
+
+```bash
+pip install curl_cffi
+```
+
+When installed, the CLI automatically uses `curl_cffi` as a fallback when native fetch fails. No extra flags needed. Without it, the CLI works as before (fetch → curl).
 
 ### Link package into another local project
 
@@ -71,24 +88,27 @@ fmp-search <query> [options]
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `-l, --limit <n>` | integer | `20` | Maximum number of results returned. |
-| `--sort <order>` | string | `relevance` | Sort order: `price_asc`, `price_desc`, `relevance`. |
-| `--city <slug>` | string | none | Filter by city slug, ex: `saopaulo`, `riodejaneiro`, `curitiba`. |
-| `--category <slug>` | string | none | Filter by category slug, ex: `electronics`, `vehicles`. |
-| `--list-categories` | flag | `false` | Print all supported category slugs and exit. |
-| `--list-cities` | flag | `false` | Print all supported city slugs and exit. |
-| `--min-price <n>` | number | none | Minimum listing price filter. |
-| `--max-price <n>` | number | none | Maximum listing price filter. |
-| `--radius <km>` | integer | dynamic | Radius in km. Defaults to `65` for city mode and `200` for general search. |
-| `--timeout <ms>` | integer | `15000` | HTTP timeout for each request. |
-| `--concurrency <n>` | integer | `5` | Parallel listing-detail requests. |
-| `--strict` | flag | `false` | Require all query tokens to appear in title/description. |
-| `--no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-s, --sort <order>` | string | `relevance` | Sort order: `price_asc`, `price_desc`, `relevance`. |
+| `-c, --city <slug>` | string | none | Filter by city slug, ex: `saopaulo`, `riodejaneiro`, `curitiba`. |
+| `-g, --category <slug>` | string | none | Filter by category slug, ex: `electronics`, `vehicles`. |
+| `-G, --list-categories` | flag | `false` | Print all supported category slugs and exit. |
+| `-x, --list-cities` | flag | `false` | Print all supported city slugs and exit. |
+| `-m, --min-price <n>` | number | none | Minimum listing price filter. |
+| `-M, --max-price <n>` | number | none | Maximum listing price filter. |
+| `-k, --radius <km>` | integer | dynamic | Radius in km. Defaults to `65` for city mode and `200` for general search. |
+| `-t, --timeout <ms>` | integer | `15000` | HTTP timeout for each request. |
+| `-n, --concurrency <n>` | integer | `5` | Parallel listing-detail requests. |
+| `-S, --strict` | flag | `false` | Require all query tokens to appear in title/description. |
+| `-d, --no-details` | flag | `false` | Skip detail enrichment requests (faster, returns only basic listing data — no description, images, or seller info). |
+| `-R, --no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-1, --save-on-first` | flag | `false` | Save the first HTTP response to the project root as `fmp-first_<timestamp>.json` + `.html`. |
+| `-e, --save-on-error` | flag | `false` | Save any HTTP response that returns an error to the project root as `fmp-error_<timestamp>.json` + `.html`. |
 | `-f, --format <type>` | string | `json` | Output format: `json`, `table`, `jsonl`, `csv`. |
-| `--pretty` | flag | `false` | Pretty print JSON output. |
-| `--raw` | flag | `false` | Output raw extracted data object and exit. |
-| `--fields <list>` | csv string | none | Keep only selected fields, ex: `title,price,permalink`. |
+| `-p, --pretty` | flag | `false` | Pretty print JSON output. |
+| `-r, --raw` | flag | `false` | Output raw extracted data object and exit. |
+| `-F, --fields <list>` | csv string | none | Keep only selected fields, ex: `title,price,permalink`. |
 | `-w, --web` | flag | `false` | Render results in an HTML page and open browser. |
-| `--log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
+| `-L, --log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
 
@@ -109,7 +129,7 @@ fmp-search "notebook" --no-rate-limit
 ## Logging
 
 Pass `--log` to write a timestamped log file (`fmp-search_YYYY-MM-DD_HH-MM-SS.log`) to the project root.
-The file records every HTTP request/response (URL, status code, content-type, body size), the constructed search URL, per-page parse counts, pagination progress, per-item detail-enrichment results, and the final summary.
+The file records every HTTP request/response (URL, status code, content-type, body size), the constructed search URL, per-page parse counts, pagination progress, per-item detail-enrichment results, and a request count summary (total, page, and detail calls).
 No file is created when `--log` is omitted.
 
 ```bash
