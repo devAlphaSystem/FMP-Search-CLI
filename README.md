@@ -92,6 +92,7 @@ fmp-search <query> [options]
 | `-r, --raw` | flag | `false` | Output raw extracted data object and exit. |
 | `-F, --fields <list>` | csv string | none | Keep only selected fields, ex: `title,price,permalink`. |
 | `-w, --web` | flag | `false` | Render results in an HTML page and open browser. |
+| `-j, --save-json` | flag | `false` | Save results as `fmp-results_<timestamp>.json` in the current directory (always runs, regardless of `--format` or `--web`). |
 | `-L, --log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and detail-enrichment traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
